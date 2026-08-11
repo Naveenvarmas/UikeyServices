@@ -1,12 +1,10 @@
-export default function ProductColors() {
-  const colors = [
-    "Pink",
-    "Black",
-    "Green",
-    "Yellow",
-    "Blue",
-  ];
+type ProductColorsProps = {
+  colors: string[];
+};
 
+export default function ProductColors({
+  colors,
+}: ProductColorsProps) {
   return (
     <div className="mt-8">
       <h3 className="mb-3 font-semibold">

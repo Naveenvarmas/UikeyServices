@@ -1,12 +1,10 @@
-export default function ProductHighlights() {
-  const highlights = [
-    "6.1-inch Super Retina XDR display",
-    "A16 Bionic chip, 6-core CPU",
-    "128GB Storage",
-    "48MP Main camera",
-    "iOS 17",
-  ];
+type ProductHighlightsProps = {
+  highlights: string[];
+};
 
+export default function ProductHighlights({
+  highlights,
+}: ProductHighlightsProps) {
   return (
     <div className="mt-8">
       <h3 className="mb-3 font-semibold">

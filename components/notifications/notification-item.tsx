@@ -13,7 +13,7 @@ type Notification = {
   description: string;
   time: string;
   read: boolean;
-  icon: "shopping-cart" | "credit-card" | "users" | "bell";
+  icon: string;
   color: string;
 };
 
@@ -21,7 +21,7 @@ interface NotificationItemProps {
   notification: Notification;
 }
 
-const icons = {
+const icons: Record<string, React.ElementType> = {
   "shopping-cart": ShoppingCart,
   "credit-card": CreditCard,
   users: Users,

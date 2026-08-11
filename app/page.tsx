@@ -1,11 +1,12 @@
 "use clientc"
-import Feedback from "@/app/dashboard/feedback/page"
+// import ProductsPage from "./dealer/dashboard/products/page";
+import DashboardPage from "./dealer/dashboard/page";
 
 
 export default function Home() {
   return (
   <>
-  <Feedback/>
+  <DashboardPage/>
   </>
   );
 }

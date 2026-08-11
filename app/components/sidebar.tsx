@@ -1,45 +1,104 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
-  LayoutDashboard,
-  Building2,
-  Image,
-  QrCode,
-  User,
-  LogOut,
-  MessageSquare,
-  MessageCircle,
-  Package,
-  ChevronDown,
-  ChevronRight,
-  ShoppingCart,
+  LayoutDashboard, Package, ShoppingCart, Users, BarChart2,
+  Megaphone, Wallet, Settings, Building2, HelpCircle, LogOut,
+  ChevronDown, ChevronRight, X,
 } from "lucide-react";
-import path from "path";
 
-
+interface SubRoute { name: string; path: string; }
 interface MenuItem {
   name: string;
-  icon: React.ComponentType<{ size?: number }>;
+  icon: React.ComponentType<{ size?: number; strokeWidth?: number }>;
   path: string;
+  children?: SubRoute[];
+}
+interface SidebarProps {
+  isDark: boolean;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-export default function Sidebar() {
-  const router = useRouter();
+const menuConfig: MenuItem[] = [
+  { name: "Dashboard", icon: LayoutDashboard, path: "/dealer/dashboard" },
+  {
+    name: "Products", icon: Package, path: "/dashboard/products",
+    children: [
+      { name: "All Products",     path: "/dealer/dashboard/products" },
+      { name: "Add Product",      path: "/dealer/dashboard/products/add" },
+      { name: "Categories",       path: "/dealer/dashboard/products/categories" },
+      { name: "Product Overview", path: "/dealer/dashboard/products/overview" },
+    ],
+  },
+  {
+    name: "Orders", icon: ShoppingCart, path: "/dashboard/orders",
+    children: [
+      { name: "All Orders",       path: "/dealer/dashboard/orders" },
+      { name: "Booked Orders",    path: "/dealer/dashboard/orders/booked" },
+      { name: "Ongoing Orders",   path: "/dealer/dashboard/orders/ongoing" },
+      { name: "Delivered Orders", path: "/dealer/dashboard/orders/delivered" },
+      { name: "Cancelled Orders", path: "/dealer/dashboard/orders/cancelled" },
+      { name: "Order Returns",    path: "/dealer/dashboard/orders/returns" },
+    ],
+  },
+  {
+    name: "Customers", icon: Users, path: "/dealer/dashboard/customers",
+    children: [
+      { name: "All Customers",   path: "/dealer/dashboard/customers" },
+      { name: "Customer Orders", path: "/dealer/dashboard/customers/orders" },
+    ],
+  },
+  // {
+  //   name: "Analytics", icon: BarChart2, path: "/dealer/dashboard/analytics",
+  //   children: [
+  //     { name: "Sales Report", path: "/dealer/dashboard/analytics/sales" },
+  //     { name: "Revenue",      path: "/dealer/dashboard/analytics/revenue" },
+  //   ],
+  // },
+  // {
+  //   name: "Marketing", icon: Megaphone, path: "/dealer/dashboard/marketing",
+  //   children: [
+  //     { name: "Inquiries",  path: "/dealer/dashboard/inquiries" },
+  //     { name: "Feedback",   path: "/dealer/dashboard/feedback" },
+  //     { name: "QR Details", path: "/dealer/dashboard/generate-batchs" },
+  //   ],
+  // },
+  { name: "Payouts",      icon: Wallet,     path: "/dealer/dashboard/payouts" },
+  { name: "Settings",     icon: Settings,   path: "/dealer/dashboard/settings" },
+  { name: "Subscription", icon: Building2,  path: "/dealer/dashboard/subscriptions" },
+  { name: "Support",      icon: HelpCircle, path: "/dealer/dashboard/support" },
+];
+
+export default function Sidebar({ isDark, isOpen, onClose }: SidebarProps) {
+  const router   = useRouter();
   const pathname = usePathname();
-
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
-  const [productsOpen, setProductsOpen] = useState(
-    pathname.startsWith("/dashboard/products")
-  );
-  const [ordersOpen, setOrdersOpen] = useState(
-  pathname.startsWith("/dashboard/orders")
-);
-  const [customers, setCustomers] = useState(
-  pathname.startsWith("/dashboard/customers")
-);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  // Close sidebar on route change (mobile)
+  useEffect(() => {
+    if (isMobile) onClose();
+  }, [pathname]);
+
+  const [openDropdowns, setOpenDropdowns] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+    menuConfig.forEach((item) => {
+      if (item.children && pathname.startsWith(item.path)) initial[item.path] = true;
+    });
+    return initial;
+  });
+
+  const toggleDropdown = (path: string) =>
+    setOpenDropdowns((prev) => ({ ...prev, [path]: !prev[path] }));
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -48,363 +107,189 @@ export default function Sidebar() {
   };
 
   const isActive = (path: string) => {
-    if (path === "/dashboard") {
-      return pathname === "/dashboard";
-    }
-
+    if (path === "/dealer/dashboard") return pathname === "/dealer/dashboard";
     return pathname.startsWith(path);
   };
 
-  const menu: MenuItem[] = [
-    {
-      name: "Dashboard",
-      icon: LayoutDashboard,
-      path: "/dashboard",
-    },
-    {
-      name: "Subscription",
-      icon: Building2,
-      path: "/dashboard/subscriptions",
-    },
-    {
-      name: "Images",
-      icon: Image,
-      path: "/dashboard/upload-image",
-    },
-    {
-      name: "Inquiries",
-      icon: MessageSquare,
-      path: "/dashboard/inquiries",
-    },
-    {
-      name: "QR Details",
-      icon: QrCode,
-      path: "/dashboard/generate-batchs",
-    },
-    {
-      name: "Profile",
-      icon: User,
-      path: "/dashboard/profiles",
-    },
-    {
-      name: "Feedback",
-      icon: MessageCircle,
-      path: "/dashboard/feedback",
-    },
-  ];
+  const t = {
+    bg:            isDark ? "#0a0a0a"                       : "#ffffff",
+    border:        isDark ? "#1f1f1f"                       : "#e9e0ff",
+    text:          isDark ? "#999"                          : "#5b21b6",
+    textMuted:     isDark ? "#666"                          : "#9370cc",
+    childText:     isDark ? "#666"                          : "#7c3aed",
+    childActive:   isDark ? "#a78bfa"                       : "#7c3aed",
+    childHoverBg:  isDark ? "rgba(139,92,246,0.12)"         : "rgba(124,58,237,0.08)",
+    childActiveBg: isDark ? "rgba(139,92,246,0.15)"         : "rgba(124,58,237,0.12)",
+    childBorder:   isDark ? "#2a2a2a"                       : "#ddd6fe",
+    hoverBg:       isDark ? "rgba(139,92,246,0.10)"         : "rgba(124,58,237,0.06)",
+    logoutHover:   "#f87171",
+    modalBg:       isDark ? "#111"                          : "#fff",
+    modalBorder:   isDark ? "#222"                          : "#ede9fe",
+    modalTitle:    isDark ? "#f1f1f1"                       : "#1a0533",
+    modalSub:      isDark ? "#666"                          : "#888",
+    cancelBorder:  isDark ? "#2a2a2a"                       : "#ddd",
+    cancelBg:      isDark ? "transparent"                   : "#fff",
+    cancelText:    isDark ? "#ccc"                          : "#555",
+    overlayBg:     isDark ? "rgba(0,0,0,0.7)"              : "rgba(0,0,0,0.35)",
+  };
 
-  const productRoutes = [
-    {
-      name: "All Products",
-      path: "/dashboard/products",
-    },
-    {
-      name: "Add Product",
-      path: "/dashboard/products/add",
-    },
-    {
-      name: "Categories",
-      path: "/dashboard/products/categories",
-    },
-    // {
-    //   name: "Brands",
-    //   path: "/dashboard/products/brands",
-    // },
-    {
-      name: "Product Overview",
-      path: "/dashboard/products/overview",
-    },
-    // {
-    //   name: "Home Page Products",
-    //   path: "/dashboard/products/home-products",
-    // },
-    // {
-    //   name: "Saved For Home Page",
-    //   path: "/dashboard/products/saved",
-    // },
-  ];
-  const orderRoutes = [
-  {
-    name: "All Orders",
-    path: "/dashboard/orders",
-  },
-  {
-    name: "Booked Orders",
-    path: "/dashboard/orders/booked",
-  },
-  {
-    name: "Ongoing Orders",
-    path: "/dashboard/orders/ongoing",
-  },
-  {
-    name: "Delivered Orders",
-    path: "/dashboard/orders/delivered",
-  },
-  {
-    name: "Cancelled Orders",
-    path: "/dashboard/orders/cancelled",
-  },
-  {
-    name: "Order Returns",
-    path: "/dashboard/orders/returns",
-  },
-];
-const customersRoutes = [
-   {
-    name: "All Customers",
-    path: "/dashboard/customers",
-  },
-  {
-    name: "Customers Oders",
-    path: "/dashboard/customers/oders",
-  },
-]
-  return (
-    <>
-      <div
-        className="
-          h-screen
-          w-64
-          p-4
-          flex
-          flex-col
-          border-r
-          shadow-sm
-          bg-[var(--card)]
-          text-[var(--text)]
-          border-[var(--border)]
-        "
-      >
-        {/* Logo */}
-        <div className="flex items-center gap-2 mb-6">
-          <img
-            src="/images/apnidigi_new.png"
-            alt="Apni Digi"
-            className="w-8 h-8 object-contain"
-          />
-
-          <h1 className="text-xl font-bold bg-gradient-to-r from-[#5f1bb3] to-[#8e2de2] bg-clip-text text-transparent">
+  const sidebarContent = (
+    <div style={{
+      height: "100%", width: "210px", display: "flex", flexDirection: "column",
+      background: t.bg, borderRight: `1px solid ${t.border}`,
+      overflow: "hidden", flexShrink: 0,
+      transition: "background 0.3s ease, border-color 0.3s ease",
+    }}>
+      {/* Logo + close button (mobile) */}
+      <div style={{ padding: "16px 16px 12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <img src="/apnidigilogo.png" alt="Apni Digi" style={{ width: "34px", height: "34px", objectFit: "contain" }} />
+          <span style={{ fontSize: "17px", fontWeight: "700", background: "linear-gradient(to right, #8b5cf6, #a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
             Apni Digi
-          </h1>
+          </span>
         </div>
-
-        {/* Menu */}
-        <nav className="flex flex-col gap-1 overflow-y-auto">
-          {menu.slice(0, 1).map((item) => {
-            const Icon = item.icon;
-
-            return (
-              <button
-                key={item.name}
-                onClick={() => router.push(item.path)}
-                className={`
-                  flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all
-                  ${
-                    isActive(item.path)
-                      ? "bg-gradient-to-r from-[#2b0a6b] via-[#5f1bb3] to-[#8e2de2] text-white"
-                      : "hover:bg-[var(--border)]"
-                  }
-                `}
-              >
-                <Icon size={18} />
-                {item.name}
-              </button>
-            );
-          })}
-
-          {/* Products Dropdown */}
-          <button
-            onClick={() => setProductsOpen(!productsOpen)}
-            className={`
-              flex items-center justify-between
-              px-3 py-2 rounded-lg text-sm font-medium transition-all
-              ${
-                pathname.startsWith("/dashboard/products")
-                  ? "bg-gradient-to-r from-[#2b0a6b] via-[#5f1bb3] to-[#8e2de2] text-white"
-                  : "hover:bg-[var(--border)]"
-              }
-            `}
-          >
-            <div className="flex items-center gap-3">
-              <Package size={18} />
-              Products
-            </div>
-
-            {productsOpen ? (
-              <ChevronDown size={16} />
-            ) : (
-              <ChevronRight size={16} />
-            )}
+        {isMobile && (
+          <button onClick={onClose} style={{ background: "transparent", border: "none", color: t.textMuted, cursor: "pointer", padding: "4px", display: "flex" }}>
+            <X size={18} />
           </button>
+        )}
+      </div>
 
-          {productsOpen && (
-            <div className="ml-6 flex flex-col gap-1">
-              {productRoutes.map((route) => (
-                <button
-                  key={route.path}
-                  onClick={() => router.push(route.path)}
-                  className={`
-                    text-left px-3 py-2 rounded-md text-sm transition-all
-                    ${
-                      pathname === route.path
-                        ? "bg-purple-100 text-purple-700 font-medium"
-                        : "hover:bg-[var(--border)]"
-                    }
-                  `}
-                >
-                  {route.name}
-                </button>
-              ))}
-            </div>
-          )}
-          {/* Orders Dropdown */}
-<button
-  onClick={() => setOrdersOpen(!ordersOpen)}
-  className={`
-    flex items-center justify-between
-    px-3 py-2 rounded-lg text-sm font-medium transition-all
-    ${
-      pathname.startsWith("/dashboard/orders")
-        ? "bg-gradient-to-r from-[#2b0a6b] via-[#5f1bb3] to-[#8e2de2] text-white"
-        : "hover:bg-[var(--border)]"
-    }
-  `}
->
-  <div className="flex items-center gap-3">
-    <ShoppingCart size={18} />
-    Orders
-  </div>
+      {/* Nav */}
+      <nav className="sidebar-scroll" style={{ flex: 1, overflowY: "auto", padding: "4px 12px 12px 12px", display: "flex", flexDirection: "column", gap: "2px" }}>
+        {menuConfig.map((item) => {
+          const Icon   = item.icon;
+          const active = isActive(item.path);
+          const isOpenDD = openDropdowns[item.path] ?? false;
 
-  {ordersOpen ? (
-    <ChevronDown size={16} />
-  ) : (
-    <ChevronRight size={16} />
-  )}
-</button>
-
-{ordersOpen && (
-  <div className="ml-6 flex flex-col gap-1">
-    {orderRoutes.map((route) => (
-      <button
-        key={route.path}
-        onClick={() => router.push(route.path)}
-        className={`
-          text-left px-3 py-2 rounded-md text-sm transition-all
-          ${
-            pathname === route.path
-              ? "bg-purple-100 text-purple-700 font-medium"
-              : "hover:bg-[var(--border)]"
-          }
-        `}
-      >
-        {route.name}
-      </button>
-    ))}
-  </div>
-)}
-  
-  {/* {customers oders} */}
-  <button
-  onClick={() => setCustomers(!customers)}
-  className={`
-    flex items-center justify-between
-    px-3 py-2 rounded-lg text-sm font-medium transition-all
-    ${
-      pathname.startsWith("/dashboard/customers")
-        ? "bg-gradient-to-r from-[#2b0a6b] via-[#5f1bb3] to-[#8e2de2] text-white"
-        : "hover:bg-[var(--border)]"
-    }
-  `}
->
-  <div className="flex items-center gap-3">
-    <ShoppingCart size={18} />
-    Customers
-  </div>
-
-  {customers ? (
-    <ChevronDown size={16} />
-  ) : (
-    <ChevronRight size={16} />
-  )}
-</button>
-
-{customers && (
-  <div className="ml-6 flex flex-col gap-1">
-    {customersRoutes.map((route) => (
-      <button
-        key={route.path}
-        onClick={() => router.push(route.path)}
-        className={`
-          text-left px-3 py-2 rounded-md text-sm transition-all
-          ${
-            pathname === route.path
-              ? "bg-purple-100 text-purple-700 font-medium"
-              : "hover:bg-[var(--border)]"
-          }
-        `}
-      >
-        {route.name}
-      </button>
-    ))}
-  </div>
-)}
-          {menu.slice(1).map((item) => {
-            const Icon = item.icon;
-
+          if (item.children) {
             return (
-              <button
-                key={item.name}
-                onClick={() => router.push(item.path)}
-                className={`
-                  flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all
-                  ${
-                    isActive(item.path)
-                      ? "bg-gradient-to-r from-[#2b0a6b] via-[#5f1bb3] to-[#8e2de2] text-white"
-                      : "hover:bg-[var(--border)]"
-                  }
-                `}
-              >
-                <Icon size={18} />
-                {item.name}
-              </button>
-            );
-          })}
-        </nav>
+              <div key={item.path}>
+                <button
+                  onClick={() => toggleDropdown(item.path)}
+                  style={{
+                    width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+                    padding: "9px 12px", borderRadius: "10px", border: "none", cursor: "pointer",
+                    fontSize: "14px", fontWeight: active ? "500" : "400",
+                    background: active ? "linear-gradient(135deg, #2b0a6b, #8e2de2)" : "transparent",
+                    color: active ? "#fff" : t.text, transition: "all 0.15s",
+                  }}
+                  onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = t.hoverBg; }}
+                  onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <Icon size={17} strokeWidth={1.8} />
+                    {item.name}
+                  </div>
+                  {isOpenDD ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                </button>
 
-        {/* Logout */}
+                {isOpenDD && (
+                  <div style={{ marginLeft: "16px", marginTop: "2px", display: "flex", flexDirection: "column", gap: "1px", borderLeft: `2px solid ${t.childBorder}`, paddingLeft: "12px" }}>
+                    {item.children.map((child) => {
+                      const childActive = pathname === child.path;
+                      return (
+                        <button key={child.path}
+                          onClick={() => { router.push(child.path); if (isMobile) onClose(); }}
+                          style={{
+                            textAlign: "left", padding: "7px 10px", borderRadius: "8px", border: "none",
+                            cursor: "pointer", fontSize: "13px", width: "100%", transition: "all 0.15s",
+                            background: childActive ? t.childActiveBg : "transparent",
+                            color: childActive ? t.childActive : t.childText,
+                            fontWeight: childActive ? "500" : "400",
+                          }}
+                          onMouseEnter={(e) => { if (!childActive) { (e.currentTarget as HTMLButtonElement).style.background = t.childHoverBg; (e.currentTarget as HTMLButtonElement).style.color = t.childActive; } }}
+                          onMouseLeave={(e) => { if (!childActive) { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = t.childText; } }}
+                        >
+                          {child.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          }
+
+          return (
+            <button key={item.path}
+              onClick={() => { router.push(item.path); if (isMobile) onClose(); }}
+              style={{
+                width: "100%", display: "flex", alignItems: "center", gap: "10px",
+                padding: "9px 12px", borderRadius: "10px", border: "none", cursor: "pointer",
+                fontSize: "14px", fontWeight: active ? "500" : "400", textAlign: "left",
+                background: active ? "linear-gradient(135deg, #2b0a6b, #8e2de2)" : "transparent",
+                color: active ? "#fff" : t.text, transition: "all 0.15s",
+              }}
+              onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = t.hoverBg; }}
+              onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+            >
+              <Icon size={17} strokeWidth={1.8} />
+              {item.name}
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* Logout */}
+      <div style={{ padding: "0 12px 16px 12px", flexShrink: 0 }}>
         <button
           onClick={() => setShowLogoutModal(true)}
-          className="mt-auto flex items-center gap-2 px-2 py-2 text-sm hover:text-red-500"
+          style={{ width: "100%", display: "flex", alignItems: "center", gap: "10px", padding: "9px 12px", borderRadius: "10px", border: "none", cursor: "pointer", fontSize: "14px", color: t.textMuted, background: "transparent", transition: "all 0.15s" }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = t.logoutHover; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = t.textMuted; }}
         >
-          <LogOut size={18} />
+          <LogOut size={17} strokeWidth={1.8} />
           Logout
         </button>
       </div>
+    </div>
+  );
+
+  return (
+    <>
+      <style>{`
+        .sidebar-scroll::-webkit-scrollbar { display: none; }
+        .sidebar-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
+
+      {/* Desktop — normal flow */}
+      {!isMobile && isOpen && sidebarContent}
+
+      {/* Mobile — overlay drawer */}
+      {isMobile && (
+        <>
+          {/* Backdrop */}
+          {isOpen && (
+            <div
+              onClick={onClose}
+              style={{ position: "fixed", inset: 0, zIndex: 200, background: t.overlayBg, transition: "opacity 0.3s" }}
+            />
+          )}
+          {/* Drawer */}
+          <div style={{
+            position: "fixed", top: 0, left: 0, height: "100vh", zIndex: 201,
+            transform: isOpen ? "translateX(0)" : "translateX(-100%)",
+            transition: "transform 0.3s ease",
+          }}>
+            {sidebarContent}
+          </div>
+        </>
+      )}
 
       {/* Logout Modal */}
       {showLogoutModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-80 rounded-2xl bg-white p-6 text-center shadow-xl">
-            <h2 className="text-lg font-semibold mb-2">
-              Logout?
-            </h2>
-
-            <p className="text-sm text-gray-500 mb-4">
-              You will be signed out of your account.
-            </p>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowLogoutModal(false)}
-                className="flex-1 border rounded-lg py-2"
-              >
+        <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: t.overlayBg }}>
+          <div style={{ width: "300px", borderRadius: "16px", background: t.modalBg, border: `1px solid ${t.modalBorder}`, padding: "24px", textAlign: "center", boxShadow: "0 20px 60px rgba(0,0,0,0.4)" }}>
+            <h2 style={{ fontSize: "17px", fontWeight: "600", margin: "0 0 8px 0", color: t.modalTitle }}>Logout?</h2>
+            <p style={{ fontSize: "13px", color: t.modalSub, margin: "0 0 20px 0" }}>You will be signed out of your account.</p>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button onClick={() => setShowLogoutModal(false)}
+                style={{ flex: 1, padding: "10px", borderRadius: "10px", border: `1px solid ${t.cancelBorder}`, background: t.cancelBg, color: t.cancelText, cursor: "pointer", fontSize: "14px" }}>
                 Cancel
               </button>
-
-              <button
-                onClick={handleLogout}
-                className="flex-1 rounded-lg py-2 bg-red-500 text-white"
-              >
+              <button onClick={handleLogout}
+                style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", background: "#dc2626", color: "#fff", cursor: "pointer", fontSize: "14px", fontWeight: "500" }}>
                 Logout
               </button>
             </div>

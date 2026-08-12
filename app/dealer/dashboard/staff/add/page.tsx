@@ -13,6 +13,14 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
+type FormErrors = {
+  name?: string;
+  email?: string;
+  phone?: string;
+  role?: string;
+  status?: string;
+};
+
 export default function AddStaffPage() {
   const router = useRouter();
 
@@ -22,13 +30,74 @@ export default function AddStaffPage() {
   const [role, setRole] = useState("Manager");
   const [status, setStatus] = useState("Active");
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const [errors, setErrors] = useState<FormErrors>({});
+
+  const validateForm = () => {
+    const newErrors: FormErrors = {};
+
+    // Name validation
+    const trimmedName = name.trim();
+
+    if (!trimmedName) {
+      newErrors.name = "Name is required";
+    } else if (trimmedName.length < 3) {
+      newErrors.name = "Name must be at least 3 characters";
+    } else if (!/^[A-Za-z\s]+$/.test(trimmedName)) {
+      newErrors.name =
+        "Name can contain only letters and spaces";
+    }
+
+    // Email validation
+    const trimmedEmail = email.trim();
+
+    if (!trimmedEmail) {
+      newErrors.email = "Email is required";
+    } else if (
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)
+    ) {
+      newErrors.email = "Please enter a valid email address";
+    }
+
+    // Phone validation
+    const trimmedPhone = phone.trim();
+
+    if (!trimmedPhone) {
+      newErrors.phone = "Phone number is required";
+    } else if (!/^[6-9]\d{9}$/.test(trimmedPhone)) {
+      newErrors.phone =
+        "Please enter a valid 10-digit phone number";
+    }
+
+    // Role validation
+    if (!role) {
+      newErrors.role = "Please select a role";
+    }
+
+    // Status validation
+    if (!status) {
+      newErrors.status = "Please select a status";
+    }
+
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (
+    e: React.FormEvent<HTMLFormElement>
+  ) => {
     e.preventDefault();
 
+    const isValid = validateForm();
+
+    if (!isValid) {
+      return;
+    }
+
     const newStaff = {
-      name,
-      email,
-      phone,
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
       role,
       status,
     };
@@ -44,7 +113,8 @@ export default function AddStaffPage() {
     <div className="space-y-6 p-4">
 
       {/* Header */}
-      <div>
+      <div className="flex items-center gap-4">
+
         <Button
           variant="outline"
           size="sm"
@@ -56,17 +126,21 @@ export default function AddStaffPage() {
           Back
         </Button>
 
-        <h1 className="mt-4 text-3xl font-bold">
-          Add Staff
-        </h1>
+        <div>
+          <h1 className="text-3xl font-bold">
+            Add Staff
+          </h1>
 
-        <p className="text-sm text-muted-foreground">
-          Add a new dealer staff member.
-        </p>
+          <p className="text-sm text-muted-foreground">
+            Add a new dealer staff member.
+          </p>
+        </div>
+
       </div>
 
       {/* Form */}
       <Card className="max-w-3xl">
+
         <CardHeader>
           <CardTitle>
             Staff Information
@@ -74,75 +148,154 @@ export default function AddStaffPage() {
         </CardHeader>
 
         <CardContent>
+
           <form
             onSubmit={handleSubmit}
             className="space-y-5"
+            noValidate
           >
 
             {/* Name */}
             <div>
-              <label className="text-sm font-medium">
+              <label
+                htmlFor="name"
+                className="text-sm font-medium"
+              >
                 Full Name
               </label>
 
               <Input
+                id="name"
                 value={name}
-                onChange={(e) =>
-                  setName(e.target.value)
-                }
+                onChange={(e) => {
+                  setName(e.target.value);
+
+                  if (errors.name) {
+                    setErrors((prev) => ({
+                      ...prev,
+                      name: undefined,
+                    }));
+                  }
+                }}
                 placeholder="Enter staff name"
-                className="mt-1"
-                required
+                className={`mt-1 ${
+                  errors.name
+                    ? "border-red-500 focus-visible:ring-red-500"
+                    : ""
+                }`}
               />
+
+              {errors.name && (
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.name}
+                </p>
+              )}
             </div>
 
             {/* Email */}
             <div>
-              <label className="text-sm font-medium">
+              <label
+                htmlFor="email"
+                className="text-sm font-medium"
+              >
                 Email
               </label>
 
               <Input
+                id="email"
                 type="email"
                 value={email}
-                onChange={(e) =>
-                  setEmail(e.target.value)
-                }
+                onChange={(e) => {
+                  setEmail(e.target.value);
+
+                  if (errors.email) {
+                    setErrors((prev) => ({
+                      ...prev,
+                      email: undefined,
+                    }));
+                  }
+                }}
                 placeholder="Enter email"
-                className="mt-1"
-                required
+                className={`mt-1 ${
+                  errors.email
+                    ? "border-red-500 focus-visible:ring-red-500"
+                    : ""
+                }`}
               />
+
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.email}
+                </p>
+              )}
             </div>
 
             {/* Phone */}
             <div>
-              <label className="text-sm font-medium">
+              <label
+                htmlFor="phone"
+                className="text-sm font-medium"
+              >
                 Phone
               </label>
 
               <Input
+                id="phone"
+                type="tel"
                 value={phone}
-                onChange={(e) =>
-                  setPhone(e.target.value)
-                }
-                placeholder="Enter phone number"
-                className="mt-1"
-                required
+                onChange={(e) => {
+                  setPhone(e.target.value);
+
+                  if (errors.phone) {
+                    setErrors((prev) => ({
+                      ...prev,
+                      phone: undefined,
+                    }));
+                  }
+                }}
+                placeholder="Enter 10-digit phone number"
+                maxLength={10}
+                className={`mt-1 ${
+                  errors.phone
+                    ? "border-red-500 focus-visible:ring-red-500"
+                    : ""
+                }`}
               />
+
+              {errors.phone && (
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.phone}
+                </p>
+              )}
             </div>
 
             {/* Role */}
             <div>
-              <label className="text-sm font-medium">
+              <label
+                htmlFor="role"
+                className="text-sm font-medium"
+              >
                 Role
               </label>
 
               <select
+                id="role"
                 value={role}
-                onChange={(e) =>
-                  setRole(e.target.value)
-                }
-                className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+                onChange={(e) => {
+                  setRole(e.target.value);
+
+                  if (errors.role) {
+                    setErrors((prev) => ({
+                      ...prev,
+                      role: undefined,
+                    }));
+                  }
+                }}
+                className={`mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm ${
+                  errors.role
+                    ? "border-red-500"
+                    : ""
+                }`}
               >
                 <option value="Manager">
                   Manager
@@ -156,20 +309,41 @@ export default function AddStaffPage() {
                   Support
                 </option>
               </select>
+
+              {errors.role && (
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.role}
+                </p>
+              )}
             </div>
 
             {/* Status */}
             <div>
-              <label className="text-sm font-medium">
+              <label
+                htmlFor="status"
+                className="text-sm font-medium"
+              >
                 Status
               </label>
 
               <select
+                id="status"
                 value={status}
-                onChange={(e) =>
-                  setStatus(e.target.value)
-                }
-                className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+                onChange={(e) => {
+                  setStatus(e.target.value);
+
+                  if (errors.status) {
+                    setErrors((prev) => ({
+                      ...prev,
+                      status: undefined,
+                    }));
+                  }
+                }}
+                className={`mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm ${
+                  errors.status
+                    ? "border-red-500"
+                    : ""
+                }`}
               >
                 <option value="Active">
                   Active
@@ -179,6 +353,12 @@ export default function AddStaffPage() {
                   Inactive
                 </option>
               </select>
+
+              {errors.status && (
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.status}
+                </p>
+              )}
             </div>
 
             {/* Buttons */}
@@ -205,8 +385,11 @@ export default function AddStaffPage() {
             </div>
 
           </form>
+
         </CardContent>
+
       </Card>
+
     </div>
   );
 }

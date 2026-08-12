@@ -112,7 +112,8 @@ export default function StaffPage() {
           </p>
         </div>
 
-        <Button>
+        <Button
+        onClick={()=>router.push("/dealer/dashboard/staff/add")}>
           <Plus className="mr-2 h-4 w-4" />
           Add Staff
         </Button>

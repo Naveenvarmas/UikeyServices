@@ -9,328 +9,339 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import QRCode from "qrcode";
 
 interface QRActionsProps {
-  qrImage: string;
+  qrImage?: string;
+  businessUrl?: string;
   businessName?: string;
 }
 
 export default function QRActions({
   qrImage,
+  businessUrl = "https://apnidigi.com/business/your-business",
   businessName = "Your Business",
 }: QRActionsProps) {
-  const handleDownload = () => {
-    const canvas = document.createElement("canvas");
 
-    
-    canvas.width = 800;
-    canvas.height = 1200;
+  // ============================================
+  // DOWNLOAD QR
+  // ============================================
 
-    const ctx = canvas.getContext("2d");
+  const handleDownload = async () => {
+    try {
+     
 
-    if (!ctx) {
-      return;
-    }
+      const qrDataUrl = await QRCode.toDataURL(
+        businessUrl,
+        {
+          width: 600,
+          margin: 2,
 
-    /*
-      --------------------------------
-      1. Background
-      --------------------------------
-    */
+          errorCorrectionLevel: "H",
 
-    ctx.fillStyle = "#ffffff";
-
-    ctx.fillRect(
-      0,
-      0,
-      canvas.width,
-      canvas.height
-    );
-
-
-    /*
-      --------------------------------
-      2. Main blue QR card
-      --------------------------------
-    */
-
-    const cardX = 40;
-    const cardY = 40;
-    const cardWidth = 720;
-    const cardHeight = 1120;
-    const radius = 45;
-
-    ctx.fillStyle = "#2854e8";
-
-    ctx.beginPath();
-
-    ctx.roundRect(
-      cardX,
-      cardY,
-      cardWidth,
-      cardHeight,
-      radius
-    );
-
-    ctx.fill();
-
-
-    /*
-      --------------------------------
-      3. Apni Digi
-      --------------------------------
-    */
-
-    ctx.textAlign = "center";
-
-    ctx.fillStyle = "#ffffff";
-
-    ctx.font = "bold 38px Arial";
-
-    ctx.fillText(
-      "Apni Digi",
-      canvas.width / 2,
-      125
-    );
-
-
-    /*
-      --------------------------------
-      4. Business Name
-      --------------------------------
-    */
-
-    ctx.font = "bold 42px Arial";
-
-    ctx.fillText(
-      businessName,
-      canvas.width / 2,
-      255
-    );
-
-
-    /*
-      --------------------------------
-      5. QR Code white container
-      --------------------------------
-    */
-
-    const qrContainerX = 110;
-    const qrContainerY = 320;
-    const qrContainerWidth = 580;
-    const qrContainerHeight = 580;
-
-    ctx.fillStyle = "#ffffff";
-
-    ctx.beginPath();
-
-    ctx.roundRect(
-      qrContainerX,
-      qrContainerY,
-      qrContainerWidth,
-      qrContainerHeight,
-      40
-    );
-
-    ctx.fill();
-
-
-    /*
-      --------------------------------
-      6. Load QR image
-      --------------------------------
-    */
-
-    const qr = new Image();
-
-    qr.crossOrigin = "anonymous";
-
-    qr.onload = () => {
-      /*
-        QR size inside white container
-      */
-
-      const qrSize = 480;
-
-      const qrX =
-        (canvas.width - qrSize) / 2;
-
-      const qrY =
-        qrContainerY +
-        (qrContainerHeight - qrSize) / 2;
-
-
-      ctx.drawImage(
-        qr,
-        qrX,
-        qrY,
-        qrSize,
-        qrSize
+          color: {
+            dark: "#000000",
+            light: "#ffffff",
+          },
+        }
       );
 
 
-      /*
-        --------------------------------
-        7. Scan to see
-        --------------------------------
-      */
+      // ============================================
+      // CREATE CANVAS
+      // ============================================
+
+      const canvas =
+        document.createElement("canvas");
+
+      canvas.width = 800;
+      canvas.height = 1200;
+
+
+      const ctx =
+        canvas.getContext("2d");
+
+      if (!ctx) {
+        throw new Error(
+          "Could not create canvas context"
+        );
+      }
+
+
+      // ============================================
+      // WHITE PAGE BACKGROUND
+      // ============================================
 
       ctx.fillStyle = "#ffffff";
 
-      ctx.font = "bold 32px Arial";
-
-      ctx.fillText(
-        "Scan to see",
-        canvas.width / 2,
-        1000
+      ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
       );
 
 
-      /*
-        --------------------------------
-        8. Business Profile
-        --------------------------------
-      */
+      // ============================================
+      // BLUE QR CARD
+      // ============================================
+
+      ctx.fillStyle = "#2f55e7";
+
+      ctx.beginPath();
+
+      ctx.roundRect(
+        40,
+        40,
+        720,
+        1120,
+        45,
+      );
+
+      ctx.fill();
+
+
+      // ============================================
+      // APNI DIGI
+      // ============================================
+
+      ctx.textAlign = "center";
+
+      ctx.fillStyle = "#ffffff";
+
+      ctx.font =
+        "bold 38px Arial";
 
       ctx.fillText(
-        "Business Profile",
-        canvas.width / 2,
-        1045
+        "Apni Digi",
+        400,
+        125
       );
 
 
-      /*
-        --------------------------------
-        9. Bottom white box
-        --------------------------------
-      */
+      // ============================================
+      // BUSINESS NAME
+      // ============================================
 
-      const bottomX = 110;
-      const bottomY = 1080;
-      const bottomWidth = 580;
-      const bottomHeight = 90;
+      ctx.font =
+        "bold 42px Arial";
+
+      ctx.fillText(
+        businessName,
+        400,
+        225
+      );
+
+
+      // ============================================
+      // WHITE QR CONTAINER
+      // ============================================
 
       ctx.fillStyle = "#ffffff";
 
       ctx.beginPath();
 
       ctx.roundRect(
-        bottomX,
-        bottomY,
-        bottomWidth,
-        bottomHeight,
-        25
+        110,
+        320,
+        580,
+        580,
+        35,
+        
       );
 
       ctx.fill();
 
 
-      /*
-        --------------------------------
-        10. Powered & Operated by
-        --------------------------------
-      */
+      // ============================================
+      // LOAD GENERATED QR
+      // ============================================
 
-      ctx.fillStyle = "#9ca3af";
+      const qrImageElement =
+        new Image();
 
-      ctx.font = "20px Arial";
+      qrImageElement.onload = () => {
 
-      ctx.fillText(
-        "Powered & Operated by",
-        canvas.width / 2,
-        1115
+        const qrSize = 500;
+
+        const qrX =
+          (canvas.width - qrSize) / 2;
+
+        const qrY = 360;
+
+
+        ctx.drawImage(
+          qrImageElement,
+          qrX,
+          qrY,
+          qrSize,
+          qrSize
+        );
+
+
+        // ========================================
+        // SCAN TEXT
+        // ========================================
+
+        ctx.textAlign = "center";
+
+        ctx.fillStyle = "#ffffff";
+
+        ctx.font =
+          "bold 30px Arial";
+
+        ctx.fillText(
+          "Scan to see",
+          400,
+          980
+        );
+
+        ctx.fillText(
+          "Business Profile",
+          400,
+          1020
+        );
+
+
+        // ========================================
+        // BOTTOM WHITE CONTAINER
+        // ========================================
+
+        ctx.fillStyle = "#ffffff";
+
+        ctx.beginPath();
+
+        ctx.roundRect(
+          110,
+          1060,
+          580,
+          100,
+          20,
+        
+        );
+
+        ctx.fill();
+
+
+        // ========================================
+        // POWERED TEXT
+        // ========================================
+
+        ctx.fillStyle = "#9ca3af";
+
+        ctx.font =
+          "18px Arial";
+
+        ctx.fillText(
+          "Powered & Operated by",
+          400,
+          1090
+        );
+
+
+        // ========================================
+        // APNI DIGI BRAND
+        // ========================================
+
+        ctx.fillStyle = "#7c3aed";
+
+        ctx.font =
+          "bold 25px Arial";
+
+        ctx.fillText(
+          "Apni Digi",
+          400,
+          1125
+        );
+
+
+        // ========================================
+        // DOWNLOAD IMAGE
+        // ========================================
+
+        const link =
+          document.createElement("a");
+
+        link.download =
+          "apni-digi-qr.png";
+
+        link.href =
+          canvas.toDataURL(
+            "image/png"
+          );
+
+        link.click();
+      };
+
+
+      qrImageElement.onerror = () => {
+        throw new Error(
+          "Failed to generate QR image"
+        );
+      };
+
+
+      // Set generated QR
+      qrImageElement.src =
+        qrDataUrl;
+
+    } catch (error) {
+
+      console.error(
+        "QR download failed:",
+        error
       );
 
-
-      /*
-        --------------------------------
-        11. Apni Digi bottom text
-        --------------------------------
-      */
-
-      ctx.fillStyle = "#8b35ff";
-
-      ctx.font = "bold 25px Arial";
-
-      ctx.fillText(
-        "Apni Digi",
-        canvas.width / 2,
-        1145
+      alert(
+        "Unable to download QR code. Please try again."
       );
-
-
-      /*
-        --------------------------------
-        12. Convert canvas to image
-        --------------------------------
-      */
-
-      const imageUrl =
-        canvas.toDataURL("image/png");
-
-
-      /*
-        --------------------------------
-        13. Download
-        --------------------------------
-      */
-
-      const link =
-        document.createElement("a");
-
-      link.href = imageUrl;
-
-      link.download =
-        "apni-digi-business-qr.png";
-
-      link.click();
-    };
-
-
-    /*
-      Start loading QR image
-    */
-
-    qr.src = qrImage;
+    }
   };
 
+  // UI
 
   return (
     <div className="flex flex-wrap gap-2">
 
-      {/* DOWNLOAD - FUNCTIONAL */}
       <Button
         onClick={handleDownload}
       >
         <Download className="mr-2 h-4 w-4" />
+
         Download
       </Button>
 
 
-      {/* PNG - NO FUNCTIONALITY */}
-      <Button variant="outline">
+      <Button
+        variant="outline"
+      >
         <FileImage className="mr-2 h-4 w-4" />
+
         PNG
       </Button>
 
 
-      {/* SVG - NO FUNCTIONALITY */}
-      <Button variant="outline">
+      <Button
+        variant="outline"
+      >
         <FileCode className="mr-2 h-4 w-4" />
+
         SVG
       </Button>
 
-
-      {/* PRINT - NO FUNCTIONALITY */}
-      <Button variant="outline">
+      <Button
+        variant="outline"
+      >
         <Printer className="mr-2 h-4 w-4" />
+
         Print
       </Button>
 
-
-      {/* SHARE - NO FUNCTIONALITY */}
-      <Button variant="outline">
+      <Button
+        variant="outline"
+      >
         <Share2 className="mr-2 h-4 w-4" />
+
         Share
       </Button>
 

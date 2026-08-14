@@ -182,7 +182,6 @@ export default function QRCodePage() {
 
                   <QRActions
                     qrImage={qrData.qrImage}
-                    businessUrl={qrData.businessUrl}
                   />
 
                 </div>

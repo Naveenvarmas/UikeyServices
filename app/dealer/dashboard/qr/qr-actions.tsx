@@ -12,214 +12,32 @@ import { Button } from "@/components/ui/button";
 
 interface QRActionsProps {
   qrImage: string;
-  businessUrl?: string;
+  businessName?: string;
 }
 
 export default function QRActions({
   qrImage,
-  businessUrl = "https://apnidigi.com/business/your-business",
+  businessName = "Your Business",
 }: QRActionsProps) {
-
-  // Download QR as PNG
-  const downloadPNG = () => {
-    const link = document.createElement("a");
-
-    link.href = qrImage;
-    link.download = "apni-digi-qr.png";
-
-    link.click();
-  };
-
-
-  // Download QR as SVG
-  const downloadSVG = () => {
-    const svg = `
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="400"
-        height="400"
-        viewBox="0 0 400 400"
-      >
-        <rect
-          width="400"
-          height="400"
-          fill="white"
-        />
-
-        <image
-          href="${qrImage}"
-          width="400"
-          height="400"
-        />
-      </svg>
-    `;
-
-    const blob = new Blob([svg], {
-      type: "image/svg+xml",
-    });
-
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-
-    link.href = url;
-    link.download = "apni-digi-qr.svg";
-
-    link.click();
-
-    URL.revokeObjectURL(url);
-  };
-
-
-  // Print QR
-  const printQR = () => {
-    const printWindow = window.open("", "_blank");
-
-    if (!printWindow) {
-      alert("Please allow pop-ups to print the QR code.");
-      return;
-    }
-
-    printWindow.document.write(`
-      <!DOCTYPE html>
-
-      <html>
-        <head>
-          <title>Apni Digi QR Code</title>
-
-          <style>
-            * {
-              box-sizing: border-box;
-            }
-
-            body {
-              margin: 0;
-              min-height: 100vh;
-
-              display: flex;
-              justify-content: center;
-              align-items: center;
-
-              font-family: Arial, sans-serif;
-              background: white;
-            }
-
-            .container {
-              text-align: center;
-            }
-
-            img {
-              width: 400px;
-              height: 400px;
-              object-fit: contain;
-            }
-
-            .powered {
-              margin-top: 40px;
-              color: #9ca3af;
-              font-size: 18px;
-            }
-
-            .brand {
-              margin-top: 8px;
-              color: #4f46e5;
-              font-size: 28px;
-              font-weight: bold;
-            }
-
-            @media print {
-              body {
-                min-height: auto;
-              }
-            }
-          </style>
-        </head>
-
-        <body>
-
-          <div class="container">
-
-            <img
-              src="${qrImage}"
-              alt="Apni Digi QR Code"
-            />
-
-            <div class="powered">
-              Powered & Operated by
-            </div>
-
-            <div class="brand">
-              Apni Digi
-            </div>
-
-          </div>
-
-        </body>
-      </html>
-    `);
-
-    printWindow.document.close();
-
-    printWindow.focus();
-
-    setTimeout(() => {
-      printWindow.print();
-      printWindow.close();
-    }, 300);
-  };
-
-
-  // Share QR / Business URL
-  const shareQR = async () => {
-    try {
-
-      // Mobile/browser Web Share API
-      if (navigator.share) {
-
-        await navigator.share({
-          title: "Apni Digi",
-          text: "Scan this QR code to view our business profile.",
-          url: businessUrl,
-        });
-
-        return;
-      }
-
-
-      // Fallback: copy URL
-      await navigator.clipboard.writeText(
-        businessUrl
-      );
-
-      alert("Business link copied!");
-
-    } catch (error) {
-
-      console.error(
-        "Share failed:",
-        error
-      );
-
-    }
-  };
-
-
-  // Download designed QR poster
   const handleDownload = () => {
+    const canvas = document.createElement("canvas");
 
-    const canvas =
-      document.createElement("canvas");
-
+    
     canvas.width = 800;
     canvas.height = 1200;
 
-    const ctx =
-      canvas.getContext("2d");
+    const ctx = canvas.getContext("2d");
 
-    if (!ctx) return;
+    if (!ctx) {
+      return;
+    }
 
+    /*
+      --------------------------------
+      1. Background
+      --------------------------------
+    */
 
-    // White background
     ctx.fillStyle = "#ffffff";
 
     ctx.fillRect(
@@ -230,136 +48,289 @@ export default function QRActions({
     );
 
 
-    const qrImageElement =
-      new Image();
+    /*
+      --------------------------------
+      2. Main blue QR card
+      --------------------------------
+    */
 
-    qrImageElement.crossOrigin =
-      "anonymous";
+    const cardX = 40;
+    const cardY = 40;
+    const cardWidth = 720;
+    const cardHeight = 1120;
+    const radius = 45;
+
+    ctx.fillStyle = "#2854e8";
+
+    ctx.beginPath();
+
+    ctx.roundRect(
+      cardX,
+      cardY,
+      cardWidth,
+      cardHeight,
+      radius
+    );
+
+    ctx.fill();
 
 
-    qrImageElement.onload = () => {
+    /*
+      --------------------------------
+      3. Apni Digi
+      --------------------------------
+    */
 
-      const qrSize = 400;
+    ctx.textAlign = "center";
 
-      const x =
+    ctx.fillStyle = "#ffffff";
+
+    ctx.font = "bold 38px Arial";
+
+    ctx.fillText(
+      "Apni Digi",
+      canvas.width / 2,
+      125
+    );
+
+
+    /*
+      --------------------------------
+      4. Business Name
+      --------------------------------
+    */
+
+    ctx.font = "bold 42px Arial";
+
+    ctx.fillText(
+      businessName,
+      canvas.width / 2,
+      255
+    );
+
+
+    /*
+      --------------------------------
+      5. QR Code white container
+      --------------------------------
+    */
+
+    const qrContainerX = 110;
+    const qrContainerY = 320;
+    const qrContainerWidth = 580;
+    const qrContainerHeight = 580;
+
+    ctx.fillStyle = "#ffffff";
+
+    ctx.beginPath();
+
+    ctx.roundRect(
+      qrContainerX,
+      qrContainerY,
+      qrContainerWidth,
+      qrContainerHeight,
+      40
+    );
+
+    ctx.fill();
+
+
+    /*
+      --------------------------------
+      6. Load QR image
+      --------------------------------
+    */
+
+    const qr = new Image();
+
+    qr.crossOrigin = "anonymous";
+
+    qr.onload = () => {
+      /*
+        QR size inside white container
+      */
+
+      const qrSize = 480;
+
+      const qrX =
         (canvas.width - qrSize) / 2;
 
-      const y = 300;
+      const qrY =
+        qrContainerY +
+        (qrContainerHeight - qrSize) / 2;
 
 
-      // Draw QR
       ctx.drawImage(
-        qrImageElement,
-        x,
-        y,
+        qr,
+        qrX,
+        qrY,
         qrSize,
         qrSize
       );
 
 
-      // Powered text
-      ctx.textAlign = "center";
+      /*
+        --------------------------------
+        7. Scan to see
+        --------------------------------
+      */
+
+      ctx.fillStyle = "#ffffff";
+
+      ctx.font = "bold 32px Arial";
+
+      ctx.fillText(
+        "Scan to see",
+        canvas.width / 2,
+        1000
+      );
+
+
+      /*
+        --------------------------------
+        8. Business Profile
+        --------------------------------
+      */
+
+      ctx.fillText(
+        "Business Profile",
+        canvas.width / 2,
+        1045
+      );
+
+
+      /*
+        --------------------------------
+        9. Bottom white box
+        --------------------------------
+      */
+
+      const bottomX = 110;
+      const bottomY = 1080;
+      const bottomWidth = 580;
+      const bottomHeight = 90;
+
+      ctx.fillStyle = "#ffffff";
+
+      ctx.beginPath();
+
+      ctx.roundRect(
+        bottomX,
+        bottomY,
+        bottomWidth,
+        bottomHeight,
+        25
+      );
+
+      ctx.fill();
+
+
+      /*
+        --------------------------------
+        10. Powered & Operated by
+        --------------------------------
+      */
 
       ctx.fillStyle = "#9ca3af";
 
-      ctx.font =
-        "28px Arial";
+      ctx.font = "20px Arial";
 
       ctx.fillText(
         "Powered & Operated by",
         canvas.width / 2,
-        850
+        1115
       );
 
 
-      // Brand name
-      ctx.fillStyle =
-        "#4f46e5";
+      /*
+        --------------------------------
+        11. Apni Digi bottom text
+        --------------------------------
+      */
 
-      ctx.font =
-        "bold 36px Arial";
+      ctx.fillStyle = "#8b35ff";
+
+      ctx.font = "bold 25px Arial";
 
       ctx.fillText(
         "Apni Digi",
         canvas.width / 2,
-        900
+        1145
       );
 
 
-      // Download
+      /*
+        --------------------------------
+        12. Convert canvas to image
+        --------------------------------
+      */
+
+      const imageUrl =
+        canvas.toDataURL("image/png");
+
+
+      /*
+        --------------------------------
+        13. Download
+        --------------------------------
+      */
+
       const link =
         document.createElement("a");
 
-      link.download =
-        "apni-digi-qr.png";
+      link.href = imageUrl;
 
-      link.href =
-        canvas.toDataURL(
-          "image/png"
-        );
+      link.download =
+        "apni-digi-business-qr.png";
 
       link.click();
     };
 
 
-    qrImageElement.src =
-      qrImage;
+    /*
+      Start loading QR image
+    */
+
+    qr.src = qrImage;
   };
 
 
   return (
     <div className="flex flex-wrap gap-2">
 
-      {/* Download designed QR poster */}
+      {/* DOWNLOAD - FUNCTIONAL */}
       <Button
         onClick={handleDownload}
       >
         <Download className="mr-2 h-4 w-4" />
-
         Download
       </Button>
 
 
-      {/* PNG */}
-      <Button
-        variant="outline"
-        onClick={downloadPNG}
-      >
+      {/* PNG - NO FUNCTIONALITY */}
+      <Button variant="outline">
         <FileImage className="mr-2 h-4 w-4" />
-
         PNG
       </Button>
 
 
-      {/* SVG */}
-      <Button
-        variant="outline"
-        onClick={downloadSVG}
-      >
+      {/* SVG - NO FUNCTIONALITY */}
+      <Button variant="outline">
         <FileCode className="mr-2 h-4 w-4" />
-
         SVG
       </Button>
 
 
-      {/* Print */}
-      <Button
-        variant="outline"
-        onClick={printQR}
-      >
+      {/* PRINT - NO FUNCTIONALITY */}
+      <Button variant="outline">
         <Printer className="mr-2 h-4 w-4" />
-
         Print
       </Button>
 
 
-      {/* Share */}
-      <Button
-        variant="outline"
-        onClick={shareQR}
-      >
+      {/* SHARE - NO FUNCTIONALITY */}
+      <Button variant="outline">
         <Share2 className="mr-2 h-4 w-4" />
-
         Share
       </Button>
 
